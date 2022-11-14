@@ -10,15 +10,15 @@ import numpy as np
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load MNIST dataset
-train_data = datasets.MNIST(root = './../MNIST_data/',
+train_data = datasets.MNIST(root='./../MNIST_data/',
                             train=True,
                             download=True,
                             transform=transforms.ToTensor())
 
-test_data = datasets.MNIST(root = './../MNIST_data/',
-                            train=False,
-                            download=True,
-                            transform=transforms.ToTensor())
+test_data = datasets.MNIST(root='./../MNIST_data/',
+                           train=False,
+                           download=True,
+                           transform=transforms.ToTensor())
 
 
 """This code is Shows dotted on the image.
@@ -44,6 +44,7 @@ train_loader = torch.utils.data.DataLoader(
 test_loader = torch.utils.data.DataLoader(
     dataset=test_data, batch_size=batch_size, shuffle=True
 )
+
 
 class CNN(nn.Module):
     def __init__(self):
@@ -73,24 +74,24 @@ class CNN(nn.Module):
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
-        return F.softmax(x, dim = 1)
+        return F.softmax(x, dim=1)
 
 
-classification_model = CNN().to(device)
-optimizer = optim.Adam(classification_model.parameters(), lr=learning_rate)
-criterion = nn.CrossEntropyLoss()
+# classification_model = CNN().to(device)
+# optimizer = optim.Adam(classification_model.parameters(), lr=learning_rate)
+# criterion = nn.CrossEntropyLoss()
 
 
-# Train the CNN model
-classification_model.train()
-for epoch in range(epoch_num):
-    for data, target in train_loader:
-        data = data.to(device)
-        target = target.to(device)
-        optimizer.zero_grad()
-        output = classification_model(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
-    #epoch마다 loss 출력
-    print('Epoch : {} \tLoss : {:.6f}'.format(epoch, loss.item()))
+# # Train the CNN model
+# classification_model.train()
+# for epoch in range(epoch_num):
+#     for data, target in train_loader:
+#         data = data.to(device)
+#         target = target.to(device)
+#         optimizer.zero_grad()
+#         output = classification_model(data)
+#         loss = criterion(output, target)
+#         loss.backward()
+#         optimizer.step()
+#     # epoch마다 loss 출력
+#     print('Epoch : {} \tLoss : {:.6f}'.format(epoch, loss.item()))

@@ -1,27 +1,26 @@
+import random
+from typing import Tuple
+from math import floor
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 
-#Hyperparameters
+# Hyperparameters
 num_seeds = 10
 action_size = 2
 RL_epoch = 100
 
 
 env_name = "MnistEnv-v1"
-agent_name = "REINFORCE"
-
-import numpy as np
-from math import floor
-from typing import Tuple
-import random
+agent_name = "Reinforce"
 
 
-class REINFORCE(nn.Module):
+class Reinforce(nn.Module):
     def __init__(self, opt):
-        super(REINFORCE, self).__init__()
+        super(Reinforce, self).__init__()
 
         self.data = []
 
@@ -35,17 +34,19 @@ class REINFORCE(nn.Module):
         self.fc_std = torch.nn.Linear(1024, action_size)
 
         self.dropout = nn.Dropout2d(0.25)
-        self.optimizer = optim.Adam(self.parameters(), lr=RL_learning_rate)
-        
-        self.x_range = torch.linspace(-1,1,28)
-        self.y_range = torch.linspace(-1,1,28)
-        self.x,y = torch.meshgrid(self.x_range,self.y_range)
-        self.y = self.y.expand([opt.batch_size,1,-1,-1])
-        self.x = self.x.expand([opt.batch_size,1,-1,-1])
-        self.normalized_coord= torch.cat([self.x,self.y],dim=1).to(opt.device) # [batch_size,2,28,28]
+        self.optimizer = optim.Adam(self.parameters(), lr=opt.rl_learning_rate)
+
+        self.x_range = torch.linspace(-1, 1, 28)
+        self.y_range = torch.linspace(-1, 1, 28)
+        self.x, y = torch.meshgrid(self.x_range, self.y_range)
+        self.y = self.y.expand([opt.batch_size, 1, -1, -1])
+        self.x = self.x.expand([opt.batch_size, 1, -1, -1])
+        self.normalized_coord = torch.cat([self.x, self.y], dim=1).to(
+            opt.device)  # [batch_size,2,28,28]
 
     def forward(self, state):
-        state = self.conv1(torch.cat([state,self.normalized_coord],dim=1))  # conv1
+        state = self.conv1(
+            torch.cat([state, self.normalized_coord], dim=1))  # conv1
         state = F.relu(state)
         state = F.max_pool2d(state, 2)
         state = self.conv2(state)  # conv2
