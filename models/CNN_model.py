@@ -6,20 +6,6 @@ from torchvision import datasets, transforms
 
 import numpy as np
 
-# if gpu is to be used
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# Load MNIST dataset
-train_data = datasets.MNIST(root='./../MNIST_data/',
-                            train=True,
-                            download=True,
-                            transform=transforms.ToTensor())
-
-test_data = datasets.MNIST(root='./../MNIST_data/',
-                           train=False,
-                           download=True,
-                           transform=transforms.ToTensor())
-
 
 """This code is Shows dotted on the image.
 image, label = train_data[0]
@@ -37,17 +23,9 @@ batch_size = 3000
 learning_rate = 0.005
 epoch_num = 30
 
-# Data loader
-train_loader = torch.utils.data.DataLoader(
-    dataset=train_data, batch_size=batch_size, shuffle=True
-)
-test_loader = torch.utils.data.DataLoader(
-    dataset=test_data, batch_size=batch_size, shuffle=True
-)
-
 
 class CNN(nn.Module):
-    def __init__(self):
+    def __init__(self, opt):
         super(CNN, self).__init__()
         # nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, padding_mode, dilation, groups, bias)
         self.conv1 = nn.Conv2d(

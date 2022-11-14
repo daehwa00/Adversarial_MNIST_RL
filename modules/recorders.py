@@ -13,18 +13,15 @@ class Recorder():
 
     def __init__(self,
                  record_dir: str,
-                 model: 'model',
-                 optimizer: 'optimizer',
-                 scheduler: 'scheduler',
-                 amp: 'amp'=None,
-                 logger: logging.RootLogger=None):
+                 model,
+                 logger: logging.RootLogger = None):
         """Recorder 초기화
-            
+
         Args:
 
         Note:
         """
-        
+
         self.record_dir = record_dir
         self.plot_dir = os.path.join(record_dir, 'plots')
         self.record_filepath = os.path.join(self.record_dir, 'record.csv')
@@ -32,12 +29,9 @@ class Recorder():
 
         self.logger = logger
         self.model = model
-        self.optimizer = optimizer
-        self.scheduler = scheduler
-        self.amp = amp
         os.makedirs(self.plot_dir, exist_ok=True)
 
-    def set_model(self, model: 'model'):
+    def set_model(self, model):
         self.model = model
 
     def set_logger(self, logger: logging.RootLogger):
@@ -62,13 +56,13 @@ class Recorder():
             writer.writerow(row_dict)
         self.logger.debug(f"RECORDER | record saved: {self.record_filepath}")
 
-    def save_weight(self, epoch: int)-> None:
+    def save_weight(self, epoch: int) -> None:
         """Weight 저장
             amp 추가
         Args:
             loss (float): validation loss
             model (`model`): model
-        
+
         """
         check_point = {
             'epoch': epoch + 1,
@@ -78,9 +72,9 @@ class Recorder():
             'amp': self.amp.state_dict() if self.amp else None}
 
         torch.save(check_point, self.weight_path)
-        self.logger.debug(f"RECORDER | epoch {epoch}, checkpoint saved: {self.weight_path}")
+        self.logger.debug(
+            f"RECORDER | epoch {epoch}, checkpoint saved: {self.weight_path}")
 
-    
     def save_plot(self, plots: list):
 
         record_df = pd.read_csv(self.record_filepath)
@@ -92,11 +86,12 @@ class Recorder():
             columns = [f'train_{plot_name}', f'val_{plot_name}']
 
             fig = plt.figure(figsize=(20, 8))
-            
+
             for id_, column in enumerate(columns):
                 values = record_df[column].tolist()
-                plt.plot(epoch_range, values, marker='.', c=color_list[id_], label=column)
-             
+                plt.plot(epoch_range, values, marker='.',
+                         c=color_list[id_], label=column)
+
             plt.title(plot_name, fontsize=15)
             plt.legend(loc='upper right')
             plt.grid()
@@ -104,9 +99,7 @@ class Recorder():
             plt.ylabel(plot_name)
             plt.xticks(epoch_range, [str(i) for i in epoch_range])
             plt.close(fig)
-            fig.savefig(os.path.join(self.plot_dir, plot_name +'.png'))
+            fig.savefig(os.path.join(self.plot_dir, plot_name + '.png'))
 
-            self.logger.debug(f"RECORDER | plot saved: {os.path.join(self.plot_dir, plot_name +'.png')}")
-
-
-        
+            self.logger.debug(
+                f"RECORDER | plot saved: {os.path.join(self.plot_dir, plot_name +'.png')}")

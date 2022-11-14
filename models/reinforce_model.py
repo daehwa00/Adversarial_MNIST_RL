@@ -38,9 +38,10 @@ class Reinforce(nn.Module):
 
         self.x_range = torch.linspace(-1, 1, 28)
         self.y_range = torch.linspace(-1, 1, 28)
-        self.x, y = torch.meshgrid(self.x_range, self.y_range)
-        self.y = self.y.expand([opt.batch_size, 1, -1, -1])
+        self.x, self.y = torch.meshgrid(
+            self.x_range, self.y_range, indexing="xy")
         self.x = self.x.expand([opt.batch_size, 1, -1, -1])
+        self.y = self.y.expand([opt.batch_size, 1, -1, -1])
         self.normalized_coord = torch.cat([self.x, self.y], dim=1).to(
             opt.device)  # [batch_size,2,28,28]
 
@@ -67,14 +68,14 @@ class Reinforce(nn.Module):
     def put_data(self, transition):
         self.data.append(transition)
 
-    def train_net(self):
+    def train_net(self, opt):
         self.optimizer.zero_grad()
         r_lst, log_prob_lst = [], []
         for transition in self.data:
             r_lst.append(transition[0])
             log_prob_lst.append(transition[1])
-        r_lst = torch.tensor(r_lst).to(device)
-        log_prob_lst = torch.stack(log_prob_lst).to(device)
+        r_lst = torch.tensor(r_lst).to(opt.device)
+        log_prob_lst = torch.stack(log_prob_lst).to(opt.device)
         log_prob_lst = (-1) * log_prob_lst
         loss = log_prob_lst * r_lst
         loss.mean().backward()

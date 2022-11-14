@@ -1,4 +1,4 @@
-import time
+from time import time
 import os
 import torch
 from options.train_options import TrainOptions
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     sys.path.append(prj_dir)
 
     # Set train serial (cureent time)
-    train_serial = datetime.now().strftime("%Y%m%d_%H%M%S")
+    train_serial = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Set random seed, deterministic
     seed_all(opt.seed)
@@ -35,45 +35,50 @@ if __name__ == '__main__':
     os.makedirs(train_result_dir, exist_ok=True)
 
     # Set train logger
-    logging_level = 'debug' if opt['verbose'] else 'info'
     logger = get_logger(name='train',
                         file_path=os.path.join(train_result_dir, 'train.log'),
-                        level=logging_level)
+                        level='info')
 
     # load train_loader and test_loader
     train_loader, test_loader = MNIST_data.create_dataloader(opt)
 
     # load reinforce model
-    Reinforce_model = Reinforce(opt)
+    adversarial_model = Reinforce(opt).to(opt.device)
 
-    # Set Trainer
-    trainer = Trainer(opt, Reinforce_model, train_loader, test_loader,
-                      MnistEnv, logger, train_result_dir)
+    # load cnn(classification) model
+    classification_model = CNN(opt).to(opt.device)
+
+    # load classification model parameter
+    if opt.use_existing_classification_model:
+        classification_model.load_state_dict(torch.load(
+            "./models/pretrained_model/classification_model.pt"))
+    else:
+        # train classification model
+        pass
+
+        # Set Trainer
+    trainer = Trainer(opt=opt, rl_model=adversarial_model, classification_model=classification_model, train_loader=train_loader,
+                      env=MnistEnv)
 
     # Set recorder
     recorder = Recorder(record_dir=train_result_dir,
-                        model=Reinforce_model,
-                        optimizer=opt.optimizer,
-                        scheduler=opt.scheduler,
+                        model=adversarial_model,
                         logger=logger)
     logger.info("Load early stopper, recorder")
 
-    for epoch_id in range(opt.epoch_num):
+    for epoch_id in range(opt.num_epochs):
 
         # Initiate result row
         row = dict()
         row['epoch_id'] = epoch_id
         row['train_serial'] = train_serial
-        row['lr'] = trainer.scheduler.get_last_lr()
 
-        print(f"Epoch {epoch_id}/{opt.epoch_num} Train..")
-        logger.info(f"Epoch {epoch_id}/{opt.epoch_num} Train..")
+        print(f"Epoch {epoch_id}/{opt.num_epochs} Train..")
+        logger.info(f"Epoch {epoch_id}/{opt.num_epochs} Train..")
         tic = time()
-        trainer.train(dataloader=train_loader)
+        trainer.train()
         toc = time()
-        row['train_loss'] = trainer.loss
-        for metric_name, metric_score in trainer.scores.items():
-            row[f'train_{metric_name}'] = metric_score
+        row['train_score'] = trainer.score
 
         row['train_elapsed_time'] = round(toc-tic, 1)
         # Clear
@@ -83,4 +88,4 @@ if __name__ == '__main__':
         recorder.add_row(row)
 
         # Performance record - plot
-        recorder.save_plot(opt.plot)
+        recorder.save_plot()
