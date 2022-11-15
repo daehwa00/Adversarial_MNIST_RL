@@ -25,33 +25,31 @@ class Trainer():
 
     def __init__(self,
                  opt,
-                 rl_model,
+                 adversarial_model,
                  classification_model,
                  train_loader,
+                 optimizer,
                  env,
                  logger=None):
 
         self.opt = opt
-        self.rl_model = rl_model
+        self.adversarial_model = adversarial_model
         self.classification_model = classification_model
         self.train_loader = train_loader
+        self.optimizer = optimizer
         self.env = env(opt=opt, classification_model=classification_model)
         self.logger = logger
         self.score = 0
-        self.optimizer = optim.Adam(
-            self.rl_model.parameters(), lr=opt.rl_learning_rate)
+        self.data = []
 
-    def train(self):
-
-        self.rl_model.train()  # Set model to training mode
+    def train(self, adversarial_model):
         for original_images, _ in tqdm(self.train_loader):
-
             # Load data to gpu
             original_images = original_images.to(
                 self.opt.device, dtype=torch.float)
 
             # Inference
-            mu, std = self.rl_model(original_images)
+            mu, std = adversarial_model(original_images)
 
             m_1 = Normal(mu[:, 0], std[:, 0])
             m_2 = Normal(mu[:, 1], std[:, 1])
@@ -66,18 +64,34 @@ class Trainer():
 
             action = torch.stack([action_1, action_2],
                                  dim=1)  # point, brightness
+
             r = self.env.step(original_images=original_images.type(
                 torch.float32), action=action.cpu().numpy())
 
             for i in range(self.opt.batch_size):
-                self.rl_model.put_data(
-                    [r[i], log_prob[i]]
-                )  # transation = (reward, log_prob)
+                self.put_data([r[i], log_prob[i]])
 
-            self.score += np.sum(r)/self.opt.batch_size
+            self.optimizer.zero_grad()
+            r_lst, log_prob_lst = [], []
+            for transition in self.data:
+                r_lst.append(transition[0])
+                log_prob_lst.append(transition[1])
+            r_lst = torch.tensor(r_lst).to(self.opt.device)
+            log_prob_lst = torch.stack(log_prob_lst).to(self.opt.device)
+            log_prob_lst = (-1) * log_prob_lst
+            loss = log_prob_lst * r_lst
+            loss = loss.mean()
+            loss.backward()
+            self.optimizer.step()
+            self.data = []
 
-            self.rl_model.train_net(self.opt)
+            # score는 reward의 평균
+            self.score += np.mean(r)
+        self.score = self.score / 20
 
     def clear_history(self):
         torch.cuda.empty_cache()
-        self.scores = 0
+        self.score = 0
+
+    def put_data(self, transition):
+        self.data.append(transition)

@@ -1,0 +1,13 @@
+2022-11-15 12:32:00,065 | train | INFO | Load early stopper, recorder
+2022-11-15 12:32:00,065 | train | INFO | Epoch 0/100 Train..
+2022-11-15 12:32:11,201 | train | INFO | Epoch 1/100 Train..
+2022-11-15 12:32:21,020 | train | INFO | Epoch 2/100 Train..
+2022-11-15 12:32:30,547 | train | INFO | Epoch 3/100 Train..
+2022-11-15 12:32:40,281 | train | INFO | Epoch 4/100 Train..
+2022-11-15 12:32:49,879 | train | INFO | Epoch 5/100 Train..
+2022-11-15 12:32:59,431 | train | INFO | Epoch 6/100 Train..
+2022-11-15 12:33:09,079 | train | INFO | Epoch 7/100 Train..
+2022-11-15 12:33:18,598 | train | INFO | Epoch 8/100 Train..
+2022-11-15 12:33:27,931 | train | INFO | Epoch 9/100 Train..
+2022-11-15 12:33:37,301 | train | INFO | Epoch 10/100 Train..
+2022-11-15 12:33:46,824 | train | INFO | Epoch 11/100 Train..

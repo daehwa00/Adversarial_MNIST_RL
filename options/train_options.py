@@ -28,7 +28,7 @@ class TrainOptions():
         parser.add_argument('--cnn_learning_rate', type=float,
                             default=0.005, help='learning rate for cnn')
         parser.add_argument('--rl_learning_rate', type=float,
-                            default=0.00000000001, help='learning rate for RL')
+                            default=0.0001, help='learning rate for RL')
         parser.add_argument('--num_epochs', type=int,  default=100,
                             help='number of epochs to train for')
 

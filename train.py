@@ -17,7 +17,7 @@ if __name__ == '__main__':
     opt = TrainOptions().parse()
 
     # get current directory
-    prj_dir = os.path.dirname(os.path.abspath(''))
+    prj_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.append(prj_dir)
 
     # Set train serial (cureent time)
@@ -48,6 +48,10 @@ if __name__ == '__main__':
     # load cnn(classification) model
     classification_model = CNN(opt).to(opt.device)
 
+    # Set optimizer
+    optimizer = torch.optim.Adam(
+        adversarial_model.parameters(), lr=opt.rl_learning_rate)
+
     # load classification model parameter
     if opt.use_existing_classification_model:
         classification_model.load_state_dict(torch.load(
@@ -57,8 +61,8 @@ if __name__ == '__main__':
         pass
 
         # Set Trainer
-    trainer = Trainer(opt=opt, rl_model=adversarial_model, classification_model=classification_model, train_loader=train_loader,
-                      env=MnistEnv)
+    trainer = Trainer(opt=opt, adversarial_model=adversarial_model, classification_model=classification_model, train_loader=train_loader,
+                      optimizer=optimizer, env=MnistEnv)
 
     # Set recorder
     recorder = Recorder(record_dir=train_result_dir,
@@ -75,8 +79,9 @@ if __name__ == '__main__':
 
         print(f"Epoch {epoch_id}/{opt.num_epochs} Train..")
         logger.info(f"Epoch {epoch_id}/{opt.num_epochs} Train..")
+
         tic = time()
-        trainer.train()
+        trainer.train(adversarial_model)
         toc = time()
         row['train_score'] = trainer.score
 

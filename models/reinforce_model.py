@@ -22,7 +22,7 @@ class Reinforce(nn.Module):
     def __init__(self, opt):
         super(Reinforce, self).__init__()
 
-        self.data = []
+        self.opt = opt
 
         self.conv1 = nn.Conv2d(3, 32, 3, 1, padding="same")
         self.conv2 = nn.Conv2d(32, 64, 3, 1, padding="same")
@@ -32,9 +32,6 @@ class Reinforce(nn.Module):
 
         self.fc_mu = torch.nn.Linear(1024, action_size)
         self.fc_std = torch.nn.Linear(1024, action_size)
-
-        self.dropout = nn.Dropout2d(0.25)
-        self.optimizer = optim.Adam(self.parameters(), lr=opt.rl_learning_rate)
 
         self.x_range = torch.linspace(-1, 1, 28)
         self.y_range = torch.linspace(-1, 1, 28)
@@ -53,7 +50,6 @@ class Reinforce(nn.Module):
         state = self.conv2(state)  # conv2
         state = F.relu(state)
         state = F.max_pool2d(state, 2)
-        state = self.dropout(state)
         state = torch.flatten(state, 1)
         state = self.fc1(state)  # fc1
         state = F.relu(state)
@@ -64,20 +60,3 @@ class Reinforce(nn.Module):
 
         # sigmoid를 통해 0~1사이의 값으로 만들어주며, softplus를 통해 0~무한대의 값으로 만들어준다.
         return torch.sigmoid(mu), F.softplus(std)
-
-    def put_data(self, transition):
-        self.data.append(transition)
-
-    def train_net(self, opt):
-        self.optimizer.zero_grad()
-        r_lst, log_prob_lst = [], []
-        for transition in self.data:
-            r_lst.append(transition[0])
-            log_prob_lst.append(transition[1])
-        r_lst = torch.tensor(r_lst).to(opt.device)
-        log_prob_lst = torch.stack(log_prob_lst).to(opt.device)
-        log_prob_lst = (-1) * log_prob_lst
-        loss = log_prob_lst * r_lst
-        loss.mean().backward()
-        self.optimizer.step()
-        self.data = []

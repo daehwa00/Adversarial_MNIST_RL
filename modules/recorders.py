@@ -75,31 +75,28 @@ class Recorder():
         self.logger.debug(
             f"RECORDER | epoch {epoch}, checkpoint saved: {self.weight_path}")
 
-    def save_plot(self, plots: list):
+    def save_plot(self):
 
         record_df = pd.read_csv(self.record_filepath)
         current_epoch = record_df['epoch_id'].max()
         epoch_range = list(range(0, current_epoch+1))
-        color_list = ['red', 'blue']
+        
+        plot_name = "score"
+        column = f'train_{plot_name}'
 
-        for plot_name in plots:
-            columns = [f'train_{plot_name}', f'val_{plot_name}']
+        fig = plt.figure(figsize=(20, 8))
 
-            fig = plt.figure(figsize=(20, 8))
+        values = record_df[column].tolist()
+        plt.plot(epoch_range, values, marker='.', label=column)
 
-            for id_, column in enumerate(columns):
-                values = record_df[column].tolist()
-                plt.plot(epoch_range, values, marker='.',
-                         c=color_list[id_], label=column)
+        plt.title(plot_name, fontsize=15)
+        plt.legend(loc='upper right')
+        plt.grid()
+        plt.xlabel('epoch')
+        plt.ylabel(plot_name)
+        plt.xticks(epoch_range, [str(i) for i in epoch_range])
+        plt.close(fig)
+        fig.savefig(os.path.join(self.plot_dir, plot_name + '.png'))
 
-            plt.title(plot_name, fontsize=15)
-            plt.legend(loc='upper right')
-            plt.grid()
-            plt.xlabel('epoch')
-            plt.ylabel(plot_name)
-            plt.xticks(epoch_range, [str(i) for i in epoch_range])
-            plt.close(fig)
-            fig.savefig(os.path.join(self.plot_dir, plot_name + '.png'))
-
-            self.logger.debug(
-                f"RECORDER | plot saved: {os.path.join(self.plot_dir, plot_name +'.png')}")
+        self.logger.debug(
+            f"RECORDER | plot saved: {os.path.join(self.plot_dir, plot_name +'.png')}")
